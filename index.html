@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Markdown Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .editor, .preview {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 400px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        .toolbar {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            background: #0088cc;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #006699;
+        }
+        .emoji-picker {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: none;
+        }
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+        }
+        .emoji {
+            cursor: pointer;
+            padding: 5px;
+            text-align: center;
+        }
+        .emoji:hover {
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        .preview {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="editor">
+            <div class="toolbar">
+                <button onclick="formatText('bold')"><i class="fas fa-bold"></i> Жирный</button>
+                <button onclick="formatText('italic')"><i class="fas fa-italic"></i> Курсив</button>
+                <button onclick="formatText('code')"><i class="fas fa-code"></i> Код</button>
+                <button onclick="formatText('pre')"><i class="fas fa-file-code"></i> Блок кода</button>
+                <button onclick="toggleEmojiPicker()"><i class="far fa-smile"></i> Эмодзи</button>
+            </div>
+            <textarea id="input" oninput="updatePreview()" placeholder="Введите ваш текст здесь..."></textarea>
+        </div>
+        <div class="preview" id="preview">
+            Предпросмотр появится здесь...
+        </div>
+    </div>
+
+    <div class="emoji-picker" id="emojiPicker">
+        <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+
+    <script>
+        const commonEmojis = [
+            '😊', '👍', '❤️', '🎉', '👋', '🔥', '😂', '🤔',
+            '👏', '🌟', '💪', '🙏', '😍', '🤝', '👌', '✨',
+            '💯', '🎨', '🚀', '💡', '📚', '⭐', '💻', '🎯'
+        ];
+
+        function initEmojiPicker() {
+            const emojiGrid = document.getElementById('emojiGrid');
+            commonEmojis.forEach(emoji => {
+                const div = document.createElement('div');
+                div.className = 'emoji';
+                div.textContent = emoji;
+                div.onclick = () => insertEmoji(emoji);
+                emojiGrid.appendChild(div);
+            });
+        }
+
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function insertEmoji(emoji) {
+            const textarea = document.getElementById('input');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            
+            textarea.value = text.substring(0, start) + emoji + text.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+            
+            updatePreview();
+        }
+
+        function formatText(type) {
+            const textarea = document.getElementById('input');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            
+            let formattedText = '';
+            switch(type) {
+                case 'bold':
+                    formattedText = `*${selectedText}*`;
+                    break;
+                case 'italic':
+                    formattedText = `_${selectedText}_`;
+                    break;
+                case 'code':
+                    formattedText = `\`${selectedText}\``;
+                    break;
+                case 'pre':
+                    formattedText = `\`\`\`\n${selectedText}\n\`\`\``;
+                    break;
+            }
+            
+            textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const input = document.getElementById('input').value;
+            const preview = document.getElementById('preview');
+            preview.textContent = input;
+        }
+
+        // Инициализация
+        initEmojiPicker();
+    </script>
+</body>
+</html>
