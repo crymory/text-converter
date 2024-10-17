@@ -11,6 +11,7 @@
             margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
+            color: #333;
         }
         .container {
             max-width: 1200px;
@@ -25,6 +26,9 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .preview {
+            min-height: 400px;
+        }
         textarea {
             width: 100%;
             height: 400px;
@@ -32,12 +36,23 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             resize: vertical;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
         }
         .toolbar {
             margin-bottom: 10px;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+        }
+        .toolbar-group {
+            display: flex;
+            gap: 5px;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 4px;
+            background: #f8f9fa;
         }
         button {
             padding: 8px 12px;
@@ -46,20 +61,23 @@
             background: #0088cc;
             color: white;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
         button:hover {
             background: #006699;
+            transform: translateY(-1px);
         }
         .emoji-picker {
             position: fixed;
             bottom: 20px;
             right: 20px;
             background: white;
-            padding: 10px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             display: none;
+            max-width: 320px;
+            z-index: 1000;
         }
         .emoji-grid {
             display: grid;
@@ -70,6 +88,7 @@
             cursor: pointer;
             padding: 5px;
             text-align: center;
+            font-size: 1.2em;
         }
         .emoji:hover {
             background: #f0f0f0;
@@ -78,19 +97,104 @@
         .preview {
             white-space: pre-wrap;
         }
+        .preview strong {
+            font-weight: bold;
+        }
+        .preview em {
+            font-style: italic;
+        }
+        .preview code {
+            background: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .preview pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .preview a {
+            color: #0088cc;
+            text-decoration: none;
+        }
+        .preview a:hover {
+            text-decoration: underline;
+        }
+        .preview blockquote {
+            border-left: 4px solid #0088cc;
+            margin: 0;
+            padding-left: 10px;
+            color: #666;
+        }
+        .floating-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .copy-button {
+            background: #28a745;
+        }
+        .copy-button:hover {
+            background: #218838;
+        }
+        .templates-button {
+            background: #6c757d;
+        }
+        .templates-button:hover {
+            background: #5a6268;
+        }
+        .templates-menu {
+            position: fixed;
+            bottom: 70px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+        .template-item {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .template-item:hover {
+            background: #f0f0f0;
+        }
+        .character-count {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="editor">
             <div class="toolbar">
-                <button onclick="formatText('bold')"><i class="fas fa-bold"></i> Жирный</button>
-                <button onclick="formatText('italic')"><i class="fas fa-italic"></i> Курсив</button>
-                <button onclick="formatText('code')"><i class="fas fa-code"></i> Код</button>
-                <button onclick="formatText('pre')"><i class="fas fa-file-code"></i> Блок кода</button>
-                <button onclick="toggleEmojiPicker()"><i class="far fa-smile"></i> Эмодзи</button>
+                <div class="toolbar-group">
+                    <button onclick="formatText('bold')" title="Жирный (Ctrl+B)"><i class="fas fa-bold"></i></button>
+                    <button onclick="formatText('italic')" title="Курсив (Ctrl+I)"><i class="fas fa-italic"></i></button>
+                    <button onclick="formatText('underline')" title="Подчёркнутый"><i class="fas fa-underline"></i></button>
+                    <button onclick="formatText('strikethrough')" title="Зачёркнутый"><i class="fas fa-strikethrough"></i></button>
+                </div>
+                <div class="toolbar-group">
+                    <button onclick="formatText('code')" title="Код"><i class="fas fa-code"></i></button>
+                    <button onclick="formatText('pre')" title="Блок кода"><i class="fas fa-file-code"></i></button>
+                    <button onclick="formatText('quote')" title="Цитата"><i class="fas fa-quote-right"></i></button>
+                </div>
+                <div class="toolbar-group">
+                    <button onclick="formatText('link')" title="Ссылка"><i class="fas fa-link"></i></button>
+                    <button onclick="toggleEmojiPicker()" title="Эмодзи"><i class="far fa-smile"></i></button>
+                </div>
             </div>
             <textarea id="input" oninput="updatePreview()" placeholder="Введите ваш текст здесь..."></textarea>
+            <div class="character-count" id="charCount">Символов: 0</div>
         </div>
         <div class="preview" id="preview">
             Предпросмотр появится здесь...
@@ -101,12 +205,36 @@
         <div class="emoji-grid" id="emojiGrid"></div>
     </div>
 
+    <div class="floating-buttons">
+        <button onclick="copyText()" class="copy-button" title="Копировать отформатированный текст">
+            <i class="fas fa-copy"></i> Копировать
+        </button>
+        <button onclick="toggleTemplates()" class="templates-button" title="Шаблоны">
+            <i class="fas fa-list"></i> Шаблоны
+        </button>
+    </div>
+
+    <div class="templates-menu" id="templatesMenu">
+        <div class="template-item" onclick="insertTemplate('greeting')">👋 Приветствие</div>
+        <div class="template-item" onclick="insertTemplate('announcement')">📢 Объявление</div>
+        <div class="template-item" onclick="insertTemplate('warning')">⚠️ Предупреждение</div>
+        <div class="template-item" onclick="insertTemplate('list')">📝 Список</div>
+    </div>
+
     <script>
         const commonEmojis = [
             '😊', '👍', '❤️', '🎉', '👋', '🔥', '😂', '🤔',
             '👏', '🌟', '💪', '🙏', '😍', '🤝', '👌', '✨',
-            '💯', '🎨', '🚀', '💡', '📚', '⭐', '💻', '🎯'
+            '💯', '🎨', '🚀', '💡', '📚', '⭐', '💻', '🎯',
+            '🌈', '🎵', '🎮', '📱', '💭', '💬', '📸', '🎪'
         ];
+
+        const templates = {
+            greeting: `👋 *Привет, друзья!*\nРад всех видеть!`,
+            announcement: `📢 *Важное объявление*\n\n_Текст объявления_\n\nС уважением,\nВаше имя`,
+            warning: `⚠️ *Внимание!*\n\n_Важная информация_\n\nПожалуйста, обратите внимание.`,
+            list: `📝 *Список дел:*\n\n• Пункт 1\n• Пункт 2\n• Пункт 3`
+        };
 
         function initEmojiPicker() {
             const emojiGrid = document.getElementById('emojiGrid');
@@ -122,6 +250,18 @@
         function toggleEmojiPicker() {
             const picker = document.getElementById('emojiPicker');
             picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleTemplates() {
+            const menu = document.getElementById('templatesMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function insertTemplate(templateName) {
+            const textarea = document.getElementById('input');
+            textarea.value += (textarea.value ? '\n\n' : '') + templates[templateName];
+            updatePreview();
+            toggleTemplates();
         }
 
         function insertEmoji(emoji) {
@@ -151,26 +291,82 @@
                 case 'italic':
                     formattedText = `_${selectedText}_`;
                     break;
+                case 'underline':
+                    formattedText = `__${selectedText}__`;
+                    break;
+                case 'strikethrough':
+                    formattedText = `~${selectedText}~`;
+                    break;
                 case 'code':
                     formattedText = `\`${selectedText}\``;
                     break;
                 case 'pre':
                     formattedText = `\`\`\`\n${selectedText}\n\`\`\``;
                     break;
+                case 'quote':
+                    formattedText = `> ${selectedText}`;
+                    break;
+                case 'link':
+                    const url = prompt('Введите URL:', 'https://');
+                    if (url) {
+                        formattedText = `[${selectedText || 'ссылка'}](${url})`;
+                    } else {
+                        return;
+                    }
+                    break;
             }
             
             textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
             updatePreview();
+            updateCharCount();
         }
 
         function updatePreview() {
             const input = document.getElementById('input').value;
             const preview = document.getElementById('preview');
-            preview.textContent = input;
+            
+            // Применяем форматирование Markdown
+            let formatted = input
+                .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+                .replace(/_([^_]+)_/g, '<em>$1</em>')
+                .replace(/~([^~]+)~/g, '<del>$1</del>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/```([^```]+)```/g, '<pre><code>$1</code></pre>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+                .replace(/\n/g, '<br>');
+
+            preview.innerHTML = formatted;
+            updateCharCount();
         }
+
+        function updateCharCount() {
+            const input = document.getElementById('input').value;
+            const charCount = document.getElementById('charCount');
+            charCount.textContent = `Символов: ${input.length}`;
+        }
+
+        function copyText() {
+            const textarea = document.getElementById('input');
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                alert('Текст скопирован в буфер обмена!');
+            });
+        }
+
+        // Горячие клавиши
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                formatText('bold');
+            } else if (e.ctrlKey && e.key === 'i') {
+                e.preventDefault();
+                formatText('italic');
+            }
+        });
 
         // Инициализация
         initEmojiPicker();
+        updatePreview();
     </script>
 </body>
 </html>
