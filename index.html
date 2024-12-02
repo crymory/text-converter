@@ -62,6 +62,9 @@
             color: white;
             cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         button:hover {
             background: #006699;
@@ -141,6 +144,12 @@
         .copy-button:hover {
             background: #218838;
         }
+        .telegram-copy-button {
+            background: #0088cc;
+        }
+        .telegram-copy-button:hover {
+            background: #006699;
+        }
         .templates-button {
             background: #6c757d;
         }
@@ -209,6 +218,9 @@
         <button onclick="copyText()" class="copy-button" title="Копировать отформатированный текст">
             <i class="fas fa-copy"></i> Копировать
         </button>
+        <button onclick="copyTelegramMarkdown()" class="telegram-copy-button" title="Копировать для Telegram">
+            <i class="fab fa-telegram"></i> Копировать для Telegram
+        </button>
         <button onclick="toggleTemplates()" class="templates-button" title="Шаблоны">
             <i class="fas fa-list"></i> Шаблоны
         </button>
@@ -235,6 +247,28 @@
             warning: `⚠️ *Внимание!*\n\n_Важная информация_\n\nПожалуйста, обратите внимание.`,
             list: `📝 *Список дел:*\n\n• Пункт 1\n• Пункт 2\n• Пункт 3`
         };
+
+        function convertToTelegramMarkdown(text) {
+            // Удаляем подчеркивание (нет поддержки в Telegram)
+            text = text.replace(/__([^_]+)__/g, '$1');
+
+            // Заменяем блоки кода
+            text = text.replace(/```\n?([^`]+)\n?```/g, '```\n$1\n```');
+
+            // Обработка жирного текста (поддерживаем оба варианта)
+            text = text.replace(/\*\*([^*]+)\*\*/g, '*$1*');
+
+            return text;
+        }
+
+        function copyTelegramMarkdown() {
+            const textarea = document.getElementById('input');
+            const telegramMarkdown = convertToTelegramMarkdown(textarea.value);
+
+            navigator.clipboard.writeText(telegramMarkdown).then(() => {
+                alert('Текст скопирован в формате Telegram Markdown!');
+            });
+        }
 
         function initEmojiPicker() {
             const emojiGrid = document.getElementById('emojiGrid');
@@ -361,6 +395,22 @@
             } else if (e.ctrlKey && e.key === 'i') {
                 e.preventDefault();
                 formatText('italic');
+            }
+        });
+
+        // Закрытие picker'ов при клике вне их области
+        document.addEventListener('click', function(e) {
+            const emojiPicker = document.getElementById('emojiPicker');
+            const templatesMenu = document.getElementById('templatesMenu');
+            
+            if (!document.querySelector('.emoji-picker').contains(e.target) && 
+                e.target.getAttribute('title') !== 'Эмодзи') {
+                emojiPicker.style.display = 'none';
+            }
+
+            if (!document.querySelector('.templates-menu').contains(e.target) && 
+                e.target.getAttribute('title') !== 'Шаблоны') {
+                templatesMenu.style.display = 'none';
             }
         });
 
